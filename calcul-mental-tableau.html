@@ -1,0 +1,462 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Calcul Mental Flash — Tableau</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg-1:#2a2560;
+    --bg-2:#14113a;
+    --text:#f4f5f7;
+    --text-dim:#8b93a3;
+    --accent:#f2b705;
+    --ring-track:rgba(255,255,255,0.08);
+    --card:rgba(255,255,255,0.05);
+    --border:rgba(255,255,255,0.1);
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background:var(--bg-2);
+  }
+
+  body{
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  #app{
+    position:fixed;
+    inset:0;
+    overflow-y:auto;
+    background:
+      radial-gradient(120% 90% at 15% -10%, rgba(45,212,191,0.35) 0%, transparent 55%),
+      radial-gradient(100% 80% at 92% 8%, rgba(255,143,171,0.28) 0%, transparent 55%),
+      radial-gradient(140% 100% at 50% 120%, rgba(139,92,246,0.4) 0%, transparent 60%),
+      linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  }
+
+  .screen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1.4rem;
+    text-align:center;
+    padding:2rem 1.2rem;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .35s ease;
+    overflow-y:auto;
+  }
+  .screen.visible{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  h1{
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:700;
+    font-size:clamp(1.8rem, 4.5vw, 3rem);
+    margin:0;
+    letter-spacing:0.01em;
+  }
+  .lede{
+    font-weight:300;
+    color:var(--text-dim);
+    font-size:clamp(1rem, 1.8vw, 1.25rem);
+    margin:0;
+    max-width:34rem;
+    line-height:1.5;
+  }
+
+  button, .btn{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:clamp(1rem, 1.8vw, 1.3rem);
+    color:var(--bg-2);
+    background:var(--accent);
+    border:none;
+    cursor:pointer;
+    padding:1.1rem 2.6rem;
+    border-radius:999px;
+    font-weight:600;
+    letter-spacing:0.02em;
+  }
+  button.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  button:active{ transform:scale(0.97); }
+
+  /* ---------- Game screen ---------- */
+  #q-counter{
+    position:absolute;
+    top:clamp(1.2rem, 3.5vw, 2.4rem);
+    left:0;
+    right:0;
+    text-align:center;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:clamp(1rem, 1.8vw, 1.3rem);
+    color:var(--text-dim);
+    letter-spacing:0.05em;
+  }
+
+  #op-wrap{ max-width:94vw; padding:0 3vw; }
+  #operation{
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:700;
+    font-size:clamp(2.6rem, 9vw, 6.5rem);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    text-align:center;
+    color:var(--text);
+    line-height:1.1;
+  }
+  #operation .blank{
+    display:inline-block;
+    color:var(--text-dim);
+    letter-spacing:0.12em;
+  }
+  #operation .blank.filled{
+    color:var(--accent);
+    letter-spacing:0;
+    animation:pop .4s ease;
+  }
+  @keyframes pop{
+    0%{ transform:scale(0.7); opacity:0; }
+    60%{ transform:scale(1.12); opacity:1; }
+    100%{ transform:scale(1); }
+  }
+
+  #countdown-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:clamp(5rem, 10vw, 7.5rem);
+    height:clamp(5rem, 10vw, 7.5rem);
+    position:relative;
+  }
+  #countdown-wrap svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    transform:rotate(-90deg);
+  }
+  #countdown-wrap circle{ fill:none; stroke-width:3; }
+  #countdown-wrap .track{ stroke:var(--ring-track); }
+  #countdown-wrap .progress{
+    stroke:var(--text-dim);
+    stroke-linecap:round;
+    transition:stroke-dashoffset 1s linear, stroke .3s ease;
+  }
+  #countdown-wrap.urgent .progress{ stroke:var(--accent); }
+  #countdown-wrap.chime .progress{ stroke:var(--accent); animation:ring-pulse 1.2s ease; }
+  @keyframes ring-pulse{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(1.18); }
+    100%{ transform:scale(1); }
+  }
+  #countdown-num{
+    position:relative;
+    font-weight:300;
+    font-variant-numeric:tabular-nums;
+    font-size:clamp(1.5rem, 2.8vw, 2.2rem);
+    color:var(--text-dim);
+    transition:color .3s ease;
+  }
+  #countdown-wrap.urgent #countdown-num{ color:var(--accent); }
+  #countdown-wrap.chime #countdown-num{ color:var(--accent); }
+
+  /* ---------- Result screen ---------- */
+  #result-emoji{ font-size:clamp(3rem, 8vw, 5rem); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@600;700&family=IBM+Plex+Sans:wght@300;400;500&display=swap">
+
+<div id="app">
+
+  <div id="start-screen" class="screen visible">
+    <h1>Calcul mental flash</h1>
+    <p class="lede">Version tableau numérique — 20 questions. Chaque calcul reste affiché 10 secondes, un carillon retentit, puis la réponse apparaît 3 secondes plus tard.</p>
+    <button id="btn-start">Commencer</button>
+  </div>
+
+  <div id="game-screen" class="screen">
+    <div id="q-counter">Question 1/20</div>
+
+    <div id="op-wrap"><div id="operation"></div></div>
+
+    <div id="countdown-wrap">
+      <svg viewBox="0 0 100 100">
+        <circle class="track" cx="50" cy="50" r="44"></circle>
+        <circle class="progress" cx="50" cy="50" r="44"></circle>
+      </svg>
+      <div id="countdown-num">10</div>
+    </div>
+  </div>
+
+  <div id="result-screen" class="screen">
+    <div id="result-emoji">🎉</div>
+    <h1>Bravo à tous !</h1>
+    <p class="lede">Les 20 calculs sont terminés. Beau travail, continuez à vous entraîner !</p>
+    <div class="actions">
+      <button id="btn-replay">Rejouer</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL_QUESTIONS = 20;
+  var COUNT_FROM = 10;
+  var CHIME_TO_ANSWER_MS = 3000;
+  var ANSWER_HOLD_MS = 4000;
+  var RING_R = 44;
+  var RING_C = 2 * Math.PI * RING_R;
+
+  var screens = {
+    start: document.getElementById('start-screen'),
+    game: document.getElementById('game-screen'),
+    result: document.getElementById('result-screen')
+  };
+
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle('visible', k === name);
+    });
+  }
+
+  // ---------- Exercise generation (identique à la version élève) ----------
+  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr){ return arr[randInt(0, arr.length - 1)]; }
+  function makeOp(text, answer){ return { text: text, answer: String(answer) }; }
+
+  function genAddition(){
+    var a = randInt(2, 88);
+    var b = randInt(2, 98 - a);
+    var sum = a + b;
+    var form = randInt(0, 2);
+    if(form === 0) return makeOp(a + ' + ... = ' + sum, b);
+    if(form === 1) return makeOp(a + ' + ' + b + ' = ...', sum);
+    return makeOp(sum + ' = ' + a + ' + ...', b);
+  }
+  function genMultTable(){
+    var a = randInt(3, 10), b = randInt(3, 10);
+    var prod = a * b;
+    var form = randInt(0, 2);
+    if(form === 0) return makeOp(a + ' × ... = ' + prod, b);
+    if(form === 1) return makeOp(a + ' × ' + b + ' = ...', prod);
+    return makeOp(prod + ' = ' + a + ' × ...', b);
+  }
+
+  function genDoublingFact(n){
+    var big = n * 2;
+    switch(randInt(0, 4)){
+      case 0: return makeOp('Double de ' + n + ' = ...', big);
+      case 1: return makeOp('Moitié de ' + big + ' = ...', n);
+      case 2: return makeOp('2 × ' + n + ' = ...', big);
+      case 3: return makeOp('2 × ... = ' + big, n);
+      default: return makeOp(big + ' = 2 × ...', n);
+    }
+  }
+  function genDoubleSmall(){ return genDoublingFact(randInt(1, 20)); }
+  function genDoubleTens(){ return genDoublingFact(pick([20,25,30,35,40,45,50,60,75])); }
+  function genDoubleHundreds(){ return genDoublingFact(pick([100,150,200,250,300,400,500,600])); }
+
+  function genMult25(){
+    var k = randInt(1, 4);
+    var prod = k * 25;
+    var form = randInt(0, 2);
+    if(form === 0) return makeOp(k + ' × 25 = ...', prod);
+    if(form === 1) return makeOp('... × 25 = ' + prod, k);
+    return makeOp(prod + ' = ' + k + ' × ...', 25);
+  }
+
+  var DECOMP_60 = [[1,60],[2,30],[3,20],[4,15],[5,12],[6,10]];
+  function genDecomp60(){
+    var pair = pick(DECOMP_60);
+    var a = pair[0], b = pair[1];
+    var form = randInt(0, 2);
+    if(form === 0) return makeOp(a + ' × ... = 60', b);
+    if(form === 1) return makeOp(a + ' × ' + b + ' = ...', 60);
+    return makeOp('60 = ' + a + ' × ...', b);
+  }
+
+  var generators = [
+    genAddition, genAddition, genAddition, genAddition, genAddition,
+    genMultTable, genMultTable, genMultTable, genMultTable, genMultTable,
+    genDoubleSmall, genDoubleSmall,
+    genDoubleTens, genDoubleTens,
+    genDoubleHundreds, genDoubleHundreds,
+    genMult25, genMult25,
+    genDecomp60, genDecomp60
+  ];
+
+  var lastText = null;
+  function nextOp(){
+    var op;
+    do { op = pick(generators)(); } while(op.text === lastText);
+    lastText = op.text;
+    return op;
+  }
+
+  // ---------- Métallophone (Web Audio, pas de fichier son) ----------
+  var audioCtx = null;
+  var CHIME_NOTES = [523.25, 587.33, 659.25, 783.99, 880.00]; // pentatonique (Do5..La5)
+
+  function playChime(){
+    if(!audioCtx) return;
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    var now = audioCtx.currentTime;
+    var notes = [pick(CHIME_NOTES), pick(CHIME_NOTES)];
+    notes.forEach(function(freq, i){
+      var start = now + i * 0.09;
+      var osc = audioCtx.createOscillator();
+      var partial = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      var partialGain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      partial.type = 'sine';
+      partial.frequency.value = freq * 3.97; // partiel inharmonique façon lame de métallophone
+
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.28, start + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.7);
+
+      partialGain.gain.setValueAtTime(0, start);
+      partialGain.gain.linearRampToValueAtTime(0.06, start + 0.006);
+      partialGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.6);
+
+      osc.connect(gain).connect(audioCtx.destination);
+      partial.connect(partialGain).connect(audioCtx.destination);
+
+      osc.start(start); osc.stop(start + 1.75);
+      partial.start(start); partial.stop(start + 0.65);
+    });
+  }
+
+  // ---------- Game state ----------
+  var qCounterEl = document.getElementById('q-counter');
+  var operationEl = document.getElementById('operation');
+  var countdownWrap = document.getElementById('countdown-wrap');
+  var countdownNum = document.getElementById('countdown-num');
+  var progressCircle = countdownWrap.querySelector('.progress');
+
+  progressCircle.style.strokeDasharray = RING_C.toFixed(2);
+  progressCircle.style.strokeDashoffset = '0';
+
+  var qIndex = 0;
+  var current = null;
+  var timer = null;
+  var chimeTimer = null;
+  var nextTimer = null;
+  var secondsLeft = COUNT_FROM;
+
+  function renderOperation(op){
+    var parts = op.text.split('...');
+    operationEl.innerHTML = '';
+    operationEl.appendChild(document.createTextNode(parts[0]));
+    var blank = document.createElement('span');
+    blank.className = 'blank';
+    blank.textContent = '...';
+    operationEl.appendChild(blank);
+    if(parts[1] !== undefined) operationEl.appendChild(document.createTextNode(parts[1]));
+  }
+
+  function setCountdownVisual(seconds){
+    countdownNum.textContent = seconds;
+    var ratio = seconds / COUNT_FROM;
+    progressCircle.style.strokeDashoffset = (RING_C * (1 - ratio)).toFixed(2);
+    countdownWrap.classList.toggle('urgent', seconds <= 3 && seconds > 0);
+  }
+
+  function startCountdown(){
+    secondsLeft = COUNT_FROM;
+    setCountdownVisual(secondsLeft);
+    clearInterval(timer);
+    timer = setInterval(function(){
+      secondsLeft -= 1;
+      if(secondsLeft <= 0){
+        clearInterval(timer);
+        setCountdownVisual(0);
+        onTimeUp();
+      } else {
+        setCountdownVisual(secondsLeft);
+      }
+    }, 1000);
+  }
+
+  function updateTopBar(){
+    qCounterEl.textContent = 'Question ' + Math.min(qIndex, TOTAL_QUESTIONS) + '/' + TOTAL_QUESTIONS;
+  }
+
+  function startGame(){
+    qIndex = 0;
+    showScreen('game');
+    nextQuestion();
+  }
+
+  function nextQuestion(){
+    clearTimeout(chimeTimer);
+    clearTimeout(nextTimer);
+    qIndex++;
+    if(qIndex > TOTAL_QUESTIONS){ endGame(); return; }
+    updateTopBar();
+    current = nextOp();
+    renderOperation(current);
+    countdownWrap.classList.remove('chime');
+    startCountdown();
+  }
+
+  function onTimeUp(){
+    playChime();
+    countdownWrap.classList.add('chime');
+    chimeTimer = setTimeout(revealAnswer, CHIME_TO_ANSWER_MS);
+  }
+
+  function revealAnswer(){
+    var blank = operationEl.querySelector('.blank');
+    if(blank){ blank.textContent = current.answer; blank.classList.add('filled'); }
+    nextTimer = setTimeout(nextQuestion, ANSWER_HOLD_MS);
+  }
+
+  function endGame(){
+    showScreen('result');
+  }
+
+  // ---------- Wiring ----------
+  document.getElementById('btn-start').addEventListener('click', function(){
+    if(!audioCtx){
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = Ctx ? new Ctx() : null;
+    }
+    startGame();
+  });
+
+  document.getElementById('btn-replay').addEventListener('click', function(){
+    startGame();
+  });
+
+})();
+</script>
+
+</body></html>
