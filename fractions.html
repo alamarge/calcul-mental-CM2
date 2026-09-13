@@ -173,21 +173,6 @@
   /* ---------- Écran d'accueil ---------- */
   #home-screen{ justify-content:center; gap:1.75rem; }
   #home-art{ align-self:flex-start; max-width:100%; }
-  #id-form{ display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; }
-
-  input[type="text"]{
-    font-family:var(--serif);
-    font-size:1.15rem;
-    color:var(--graphite);
-    background:transparent;
-    border:none;
-    border-bottom:1.5px solid var(--graphite-pale);
-    padding:0.5rem 0.4rem;
-    width:min(100%,15rem);
-    border-radius:0;
-  }
-  input[type="text"]:focus{ outline:none; border-bottom-color:var(--blue); }
-  input[type="text"]::placeholder{ color:var(--graphite-pale); }
 
   /* ---------- Choix des niveaux ---------- */
   .level-list{ display:flex; flex-direction:column; gap:1rem; }
@@ -379,29 +364,6 @@
   }
   .recap-line .tag{ font-weight:600; color:var(--graphite); }
 
-  /* ---------- Tableau enseignant ---------- */
-  .table-wrap{ overflow-x:auto; }
-  table{ width:100%; border-collapse:collapse; font-size:0.92rem; }
-  th{
-    text-align:left;
-    font-family:var(--sans);
-    font-size:0.7rem;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--graphite-pale);
-    font-weight:600;
-    padding:0.5rem 0.7rem 0.5rem 0;
-    border-bottom:1.5px solid var(--graphite);
-    white-space:nowrap;
-  }
-  td{
-    padding:0.6rem 0.7rem 0.6rem 0;
-    border-bottom:1px dotted var(--graphite-pale);
-    font-variant-numeric:tabular-nums;
-    white-space:nowrap;
-  }
-  td:first-child{ font-family:var(--serif); font-size:1.05rem; }
-
   @media (prefers-reduced-motion:reduce){
     *{ transition:none !important; animation:none !important; }
   }
@@ -412,17 +374,7 @@
     <p class="eyebrow">Mathématiques &middot; CM2</p>
     <h1>Les fractions,<br>au crayon</h1>
     <div id="home-art" class="figure static"></div>
-    <p class="lede">Lire, écrire, représenter, décomposer et encadrer des fractions &mdash; avec des barres et des disques découpés, comme sur le cahier.</p>
-    <form id="id-form">
-      <input id="name-input" type="text" placeholder="Ton prénom" autocomplete="given-name" maxlength="30" required>
-      <button type="submit" class="primary">Entrer</button>
-    </form>
-    <p class="serif-note">Un cahier d&rsquo;exercices pour s&rsquo;entraîner à son rythme : pas de chronomètre.</p>
-  </section>
-
-  <section id="level-screen" class="screen">
-    <p class="eyebrow" id="level-hello">Bonjour</p>
-    <h2>Choisis ton niveau</h2>
+    <p class="lede">Des barres et des disques découpés, comme sur le cahier. Choisis ton niveau pour commencer.</p>
     <div class="level-list">
       <button class="level-card" data-level="1">
         <span class="num">1</span>
@@ -439,9 +391,7 @@
         </span>
       </button>
     </div>
-    <div class="actions">
-      <button class="quiet" id="btn-change-player">Changer de joueur</button>
-    </div>
+    <p class="serif-note">Pas de chronomètre : on prend le temps de bien regarder chaque figure.</p>
   </section>
 
   <section id="game-screen" class="screen">
@@ -473,29 +423,6 @@
     <div class="actions">
       <button class="primary" id="btn-replay">Recommencer ce niveau</button>
       <button id="btn-levels">Changer de niveau</button>
-    </div>
-  </section>
-
-  <section id="teacher-screen" class="screen">
-    <p class="eyebrow">Espace enseignant</p>
-    <h2>Résultats de la classe</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Élève</th>
-            <th>Parties</th>
-            <th>Niveau 1</th>
-            <th>Niveau 2</th>
-            <th>Dernière partie</th>
-          </tr>
-        </thead>
-        <tbody id="teacher-tbody"></tbody>
-      </table>
-    </div>
-    <p class="serif-note" id="teacher-status"></p>
-    <div class="actions">
-      <button class="quiet" id="btn-teacher-back">Retour</button>
     </div>
   </section>
 
@@ -579,7 +506,9 @@ var Croquis = (function(){
         '" fill="none" stroke="var(--blue)" stroke-width="' + round(rand(0.9, 1.35)) +
         '" stroke-linecap="round" opacity="' + round(rand(0.35, 0.62)) + '"/>';
     }
-    return '<g clip-path="url(#' + clipId + ')" transform="rotate(' + angle + ' ' + cx + ' ' + cy + ')">' + lines + '</g>';
+    // Le découpage reste dans le repère de la figure ; seuls les traits tournent.
+    return '<g clip-path="url(#' + clipId + ')"><g transform="rotate(' + angle + ' ' +
+      cx + ' ' + cy + ')">' + lines + '</g></g>';
   }
 
   /* --- Barre découpée en d parts --- */
@@ -952,10 +881,8 @@ var Exos = (function(C){
   var el = function(id){ return document.getElementById(id); };
   var screens = {
     home: el('home-screen'),
-    level: el('level-screen'),
     game: el('game-screen'),
-    result: el('result-screen'),
-    teacher: el('teacher-screen')
+    result: el('result-screen')
   };
   function showScreen(name){
     Object.keys(screens).forEach(function(k){
@@ -970,7 +897,6 @@ var Exos = (function(C){
   var verdictEl = el('verdict');
   var validateBtn = el('btn-validate');
 
-  var player = '';
   var level = 1;
   var questions = [];
   var index = 0;
@@ -1201,9 +1127,7 @@ var Exos = (function(C){
     showScreen('result');
     el('result-level').textContent = 'Niveau ' + level + ' — ' +
       (level === 1 ? 'lire, écrire et représenter' : 'décomposer et encadrer');
-    el('result-title').textContent = score === questions.length
-      ? 'Sans faute, ' + player + ' !'
-      : 'Bien joué, ' + player + ' !';
+    el('result-title').textContent = score === questions.length ? 'Sans faute !' : 'Bien joué !';
     el('result-score').innerHTML = score + '<span> / ' + questions.length + '</span>';
 
     var ratio = score / questions.length;
@@ -1226,134 +1150,9 @@ var Exos = (function(C){
       }
     });
     el('result-recap').innerHTML = recap;
-
-    saveSession();
-  }
-
-  /* ---------- Identification et suivi ---------- */
-  function normalizeName(s){
-    return s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
-  }
-  function isTeacher(s){
-    var n = normalizeName(s);
-    return n === 'maitre' || n === 'maitresse' || n === 'prof' || n === 'professeur';
-  }
-  function escapeHtml(s){
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
-
-  var dbNS = null;
-  var dbReady = (async function(){
-    try{
-      dbNS = (window.claude && typeof window.claude.use === 'function')
-        ? await window.claude.use('db')
-        : null;
-    }catch(e){ dbNS = null; }
-  })();
-
-  // Sans base partagée (version publique), les parties restent sur l'appareil.
-  var LS_KEY = 'fractions-cm2-parties';
-  function readLocal(){
-    try{ return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
-    catch(e){ return []; }
-  }
-  function writeLocal(rows){
-    try{ localStorage.setItem(LS_KEY, JSON.stringify(rows.slice(-300))); }
-    catch(e){}
-  }
-
-  function saveSession(){
-    var record = {
-      player: player,
-      level: level,
-      score: score,
-      total: questions.length,
-      date: new Date().toISOString()
-    };
-    writeLocal(readLocal().concat([record]));
-    dbReady.then(function(){
-      if(!dbNS) return;
-      dbNS.collection('parties').add(record).catch(function(){});
-    });
-  }
-
-  function startTeacherView(){
-    var status = el('teacher-status');
-    status.textContent = 'Chargement des résultats…';
-    renderTeacherTable(readLocal());
-    dbReady.then(function(){
-      if(!dbNS){
-        status.textContent = 'Parties enregistrées sur cet appareil uniquement.';
-        return;
-      }
-      dbNS.collection('parties').orderBy('date', 'desc').limit(500).onSnapshot(
-        function(snap){
-          status.textContent = '';
-          renderTeacherTable(snap.docs.map(function(d){ return d.data(); }));
-        },
-        function(){ status.textContent = 'Impossible de charger les résultats pour le moment.'; }
-      );
-    });
-  }
-
-  function renderTeacherTable(rows){
-    var tbody = el('teacher-tbody');
-    if(!rows.length){
-      tbody.innerHTML = '<tr><td colspan="5">Aucune partie enregistrée pour l\'instant.</td></tr>';
-      return;
-    }
-    var byPlayer = {};
-    rows.forEach(function(r){
-      var name = String(r.player || '?').trim();
-      var key = normalizeName(name) || '?';
-      if(!byPlayer[key]) byPlayer[key] = { display: name, games: [] };
-      byPlayer[key].games.push(r);
-    });
-
-    var list = Object.keys(byPlayer).map(function(key){
-      var entry = byPlayer[key];
-      var games = entry.games.slice().sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
-      function best(lvl){
-        var pool = games.filter(function(g){ return Number(g.level) === lvl; });
-        if(!pool.length) return '—';
-        var top = pool.reduce(function(m, g){ return Math.max(m, Number(g.score) || 0); }, 0);
-        return top + ' / ' + (Number(pool[0].total) || 0);
-      }
-      var last = games[0];
-      var dt = new Date(last.date);
-      var lastLabel = isNaN(dt.getTime()) ? '—' :
-        dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' · ' +
-        dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      return {
-        display: entry.display, count: games.length,
-        n1: best(1), n2: best(2), last: lastLabel
-      };
-    });
-
-    list.sort(function(a, b){ return a.display.localeCompare(b.display, 'fr'); });
-    tbody.innerHTML = list.map(function(r){
-      return '<tr><td>' + escapeHtml(r.display) + '</td><td>' + r.count + '</td><td>' +
-        r.n1 + '</td><td>' + r.n2 + '</td><td>' + r.last + '</td></tr>';
-    }).join('');
   }
 
   /* ---------- Branchements ---------- */
-  el('id-form').addEventListener('submit', function(e){
-    e.preventDefault();
-    var name = el('name-input').value.trim();
-    if(!name) return;
-    if(isTeacher(name)){
-      showScreen('teacher');
-      startTeacherView();
-      return;
-    }
-    player = name;
-    el('level-hello').textContent = 'Bonjour ' + name;
-    showScreen('level');
-  });
-
   document.querySelectorAll('.level-card').forEach(function(card){
     card.addEventListener('click', function(){
       startSession(parseInt(card.getAttribute('data-level'), 10));
@@ -1375,17 +1174,9 @@ var Exos = (function(C){
     else advance();
   });
 
-  el('btn-quit').addEventListener('click', function(){ showScreen('level'); });
+  el('btn-quit').addEventListener('click', function(){ showScreen('home'); });
   el('btn-replay').addEventListener('click', function(){ startSession(level); });
-  el('btn-levels').addEventListener('click', function(){ showScreen('level'); });
-  el('btn-change-player').addEventListener('click', function(){
-    el('name-input').value = '';
-    showScreen('home');
-  });
-  el('btn-teacher-back').addEventListener('click', function(){
-    el('name-input').value = '';
-    showScreen('home');
-  });
+  el('btn-levels').addEventListener('click', function(){ showScreen('home'); });
 
   // Dessin d'accueil : trois quarts et cinq sixièmes, comme une marge illustrée.
   el('home-art').innerHTML =
