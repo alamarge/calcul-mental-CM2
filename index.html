@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Les jeux de la classe — CM2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Les jeux de mathématiques de la classe de CM2 : fractions et calcul mental, à jouer sur ordinateur, tablette ou téléphone.">
+<meta name="theme-color" content="#f3ecdb">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Karla:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    color-scheme:light;
+
+    --paper:#f3ecdb;
+    --paper-shade:rgba(52,48,42,0.05);
+    --graphite:#34302a;
+    --graphite-soft:#6d665b;
+    --graphite-pale:#a49a89;
+    --blue:#3c5a8a;
+    --blue-soft:rgba(60,90,138,0.12);
+    --red-soft:rgba(168,68,60,0.12);
+
+    --serif:"EB Garamond", Garamond, "Times New Roman", serif;
+    --sans:"Karla", system-ui, -apple-system, sans-serif;
+
+    --sketch-radius:255px 12px 225px 14px/14px 225px 12px 255px;
+    --sketch-radius-alt:14px 225px 12px 255px/255px 12px 225px 14px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(circle at 18% 10%, rgba(255,255,255,0.55) 0%, transparent 44%),
+      radial-gradient(circle at 84% 82%, rgba(212,197,166,0.35) 0%, transparent 48%);
+    color:var(--graphite);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-text-size-adjust:100%;
+  }
+
+  /* Grain de papier */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    opacity:0.5;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+  }
+
+  .page{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:44rem;
+    margin:0 auto;
+    padding:clamp(2rem,6vw,4rem) clamp(1rem,4vw,2rem);
+    padding-block-end:4rem;
+    display:flex;
+    flex-direction:column;
+    gap:clamp(1.75rem,4vw,2.5rem);
+  }
+
+  @media (min-width:52rem){
+    .page{ border-left:1px solid var(--red-soft); }
+  }
+
+  .eyebrow{
+    margin:0;
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--graphite-pale);
+  }
+  h1{
+    margin:0.4rem 0 0;
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(2.1rem,7vw,3.2rem);
+    line-height:1.1;
+    text-wrap:balance;
+  }
+  .lede{
+    margin:0;
+    max-width:32rem;
+    color:var(--graphite-soft);
+    font-size:clamp(1rem,2.4vw,1.08rem);
+  }
+  .rule{ display:block; width:min(100%,16rem); height:10px; overflow:visible; }
+
+  h2{
+    margin:0;
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--graphite-pale);
+  }
+
+  .group{ display:flex; flex-direction:column; gap:1rem; }
+
+  /* Jeux à jouer à la maison : encadrés au crayon */
+  .game{
+    display:flex;
+    align-items:flex-start;
+    gap:1rem;
+    padding:1.2rem 1.35rem;
+    text-decoration:none;
+    color:inherit;
+    border:1.5px solid var(--graphite);
+    border-radius:var(--sketch-radius);
+    transition:background .18s ease, transform .12s ease;
+  }
+  .game:nth-of-type(even){ border-radius:var(--sketch-radius-alt); }
+  .game:hover{ background:var(--paper-shade); }
+  .game:active{ transform:translateY(1px); }
+  .game:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; }
+
+  .game .art{ flex:none; margin-top:0.15rem; }
+  .game .art svg{ display:block; overflow:visible; }
+  .game .body{ display:flex; flex-direction:column; gap:0.2rem; }
+  .game .title{
+    font-family:var(--serif);
+    font-size:1.35rem;
+    font-weight:600;
+    line-height:1.2;
+  }
+  .game .desc{ color:var(--graphite-soft); font-size:0.95rem; line-height:1.45; }
+  .game .go{
+    margin-top:0.45rem;
+    font-size:0.78rem;
+    font-weight:600;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--blue);
+  }
+
+  /* Version classe : simple ligne, pas un jeu à envoyer aux familles */
+  .aside-link{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:0.2rem 0.6rem;
+    padding-top:0.7rem;
+    border-top:1px dotted var(--graphite-pale);
+    text-decoration:none;
+    color:inherit;
+  }
+  .aside-link .name{ font-family:var(--serif); font-size:1.1rem; }
+  .aside-link .note{ color:var(--graphite-soft); font-size:0.9rem; }
+  .aside-link:hover .name{ color:var(--blue); }
+  .aside-link:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; }
+
+  footer{
+    margin-top:0.5rem;
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:1.02rem;
+    color:var(--graphite-soft);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Classe de CM2 &middot; Mathématiques</p>
+    <h1>Les jeux de la classe</h1>
+    <svg class="rule" viewBox="0 0 260 10" aria-hidden="true">
+      <path d="M2 6 C60 3.2, 120 7.4, 180 4.6 S246 5.6, 258 4.2" fill="none" stroke="#34302a" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>
+      <path d="M4 7.4 C64 5.2, 118 8.6, 182 6.2 S244 7, 256 6" fill="none" stroke="#34302a" stroke-width="1" stroke-linecap="round" opacity="0.35"/>
+    </svg>
+  </header>
+
+  <p class="lede">À jouer à la maison, sur ordinateur, tablette ou téléphone. Rien à installer : il suffit d&rsquo;ouvrir le lien.</p>
+
+  <section class="group">
+    <h2>À la maison</h2>
+
+    <a class="game" href="fractions.html">
+      <span class="art">
+        <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
+          <defs>
+            <clipPath id="q1"><path d="M27 27 L27 5 A22 22 0 0 1 49 27 Z"/></clipPath>
+            <clipPath id="q2"><path d="M27 27 L49 27 A22 22 0 0 1 27 49 Z"/></clipPath>
+            <clipPath id="q3"><path d="M27 27 L27 49 A22 22 0 0 1 5 27 Z"/></clipPath>
+          </defs>
+          <g clip-path="url(#q1)"><g transform="rotate(-38 27 27)">
+            <path d="M8 12 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M8 17 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M8 22 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M8 27 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+          </g></g>
+          <g clip-path="url(#q2)"><g transform="rotate(-38 27 27)">
+            <path d="M8 27 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M8 32 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M8 37 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M8 42 H46" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+          </g></g>
+          <g clip-path="url(#q3)"><g transform="rotate(-38 27 27)">
+            <path d="M2 32 H40" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M2 37 H40" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+            <path d="M2 42 H40" stroke="#3c5a8a" stroke-width="1.2" opacity="0.62"/>
+          </g></g>
+          <path d="M27 5 C38 5.4, 48.6 16.2, 49 27 C48.6 38.2, 38.4 48.6, 27 49 C15.6 48.4, 5.4 38.4, 5 27 C5.6 15.8, 16 5.6, 27 5 Z"
+                fill="none" stroke="#34302a" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M27 5.6 L27 48.6" stroke="#34302a" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M5.4 27.3 L48.8 26.8" stroke="#34302a" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="body">
+        <span class="title">Les fractions au crayon</span>
+        <span class="desc">Lire, écrire et représenter des fractions, puis les décomposer et les encadrer. Deux niveaux, sans chronomètre.</span>
+        <span class="go">Jouer &rarr;</span>
+      </span>
+    </a>
+
+    <a class="game" href="calcul-mental-one.html">
+      <span class="art">
+        <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
+          <path d="M6 9 C20 8.2, 40 9.6, 48 8.8 C48.6 20, 47.8 34, 48.4 45.4 C34 46.2, 16 44.8, 6 45.6 C5.4 34, 6.4 20, 6 9 Z"
+                fill="none" stroke="#34302a" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M12 21 H26" stroke="#34302a" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M19 14 V28" stroke="#34302a" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M31 33 L41 23" stroke="#3c5a8a" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>
+          <path d="M31 23 L41 33" stroke="#3c5a8a" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>
+          <path d="M13 36 H41" stroke="#34302a" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+      </span>
+      <span class="body">
+        <span class="title">Calcul mental flash</span>
+        <span class="desc">20 questions chronométrées : additions, tables, doubles et moitiés, multiples de 25 et décompositions de 60.</span>
+        <span class="go">Jouer &rarr;</span>
+      </span>
+    </a>
+  </section>
+
+  <section class="group">
+    <h2>Pour la classe</h2>
+    <a class="aside-link" href="calcul-mental-tableau.html">
+      <span class="name">Calcul mental flash &mdash; version tableau</span>
+      <span class="note">Affichage pour le vidéoprojecteur : le calcul reste visible, un carillon sonne, la réponse apparaît.</span>
+    </a>
+  </section>
+
+  <footer>Bon entraînement !</footer>
+
+</div>
+
+</body>
+</html>
