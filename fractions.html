@@ -1,0 +1,1396 @@
+<title>Les Fractions au Crayon</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f3ecdb">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Karla:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    color-scheme:light;
+
+    --paper:#f3ecdb;
+    --paper-deep:#e9dfc7;
+    --paper-shade:rgba(52,48,42,0.05);
+
+    --graphite:#34302a;
+    --graphite-soft:#6d665b;
+    --graphite-pale:#a49a89;
+
+    --blue:#3c5a8a;
+    --blue-soft:rgba(60,90,138,0.14);
+    --red:#a8443c;
+    --red-soft:rgba(168,68,60,0.12);
+    --green:#5a7345;
+    --green-soft:rgba(90,115,69,0.14);
+
+    --serif:"EB Garamond", Garamond, "Times New Roman", serif;
+    --sans:"Karla", system-ui, -apple-system, sans-serif;
+
+    --sketch-radius:255px 12px 225px 14px/14px 225px 12px 255px;
+    --sketch-radius-alt:14px 225px 12px 255px/255px 12px 225px 14px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ height:100%; }
+
+  body{
+    margin:0;
+    min-height:100%;
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,0.55) 0%, transparent 42%),
+      radial-gradient(circle at 82% 78%, rgba(212,197,166,0.35) 0%, transparent 48%);
+    color:var(--graphite);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-text-size-adjust:100%;
+  }
+
+  /* Grain de papier : bruit SVG très léger, en surcouche fixe */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    opacity:0.5;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+  }
+
+  #app{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:44rem;
+    margin:0 auto;
+    padding:clamp(1.25rem,4vw,2.5rem) clamp(1rem,4vw,2rem);
+    padding-block-end:3rem;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Marge rouge du cahier : uniquement sur écran large */
+  @media (min-width:52rem){
+    #app{ border-left:1px solid var(--red-soft); }
+    #app::before{
+      content:"";
+      position:absolute;
+      top:0; bottom:0; left:1.6rem;
+      width:1px;
+      background:linear-gradient(180deg, transparent, rgba(168,68,60,0.3) 8%, rgba(168,68,60,0.3) 92%, transparent);
+    }
+  }
+
+  .screen{
+    display:none;
+    flex-direction:column;
+    gap:1.5rem;
+    flex:1;
+  }
+  .screen.visible{ display:flex; }
+
+  /* ---------- Typographie ---------- */
+  h1{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(2rem,7vw,3.1rem);
+    line-height:1.1;
+    letter-spacing:0.01em;
+    margin:0;
+    text-wrap:balance;
+  }
+  h2{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(1.35rem,4vw,1.8rem);
+    margin:0;
+    text-wrap:balance;
+  }
+  .lede{
+    margin:0;
+    max-width:34rem;
+    color:var(--graphite-soft);
+    font-size:clamp(0.95rem,2.4vw,1.05rem);
+  }
+  .eyebrow{
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--graphite-pale);
+    margin:0;
+  }
+  .serif-note{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:1.05rem;
+    color:var(--graphite-soft);
+    margin:0;
+  }
+
+  /* ---------- Boutons tracés au crayon ---------- */
+  button{
+    font-family:var(--sans);
+    font-size:1rem;
+    font-weight:600;
+    color:var(--graphite);
+    background:transparent;
+    border:1.5px solid var(--graphite);
+    border-radius:var(--sketch-radius);
+    padding:0.7rem 1.6rem;
+    cursor:pointer;
+    transition:background .18s ease, transform .12s ease;
+  }
+  button:hover{ background:var(--paper-shade); }
+  button:active{ transform:translateY(1px); }
+  button:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; }
+  button.primary{
+    border-width:2px;
+    border-radius:var(--sketch-radius-alt);
+    background:var(--blue-soft);
+  }
+  button.quiet{
+    border-color:var(--graphite-pale);
+    color:var(--graphite-soft);
+    font-weight:500;
+    padding:0.5rem 1.1rem;
+    font-size:0.9rem;
+  }
+  button[disabled]{ opacity:0.45; cursor:default; }
+
+  .actions{ display:flex; flex-wrap:wrap; gap:0.75rem; }
+
+  /* ---------- Écran d'accueil ---------- */
+  #home-screen{ justify-content:center; gap:1.75rem; }
+  #home-art{ align-self:flex-start; max-width:100%; }
+  #id-form{ display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; }
+
+  input[type="text"]{
+    font-family:var(--serif);
+    font-size:1.15rem;
+    color:var(--graphite);
+    background:transparent;
+    border:none;
+    border-bottom:1.5px solid var(--graphite-pale);
+    padding:0.5rem 0.4rem;
+    width:min(100%,15rem);
+    border-radius:0;
+  }
+  input[type="text"]:focus{ outline:none; border-bottom-color:var(--blue); }
+  input[type="text"]::placeholder{ color:var(--graphite-pale); }
+
+  /* ---------- Choix des niveaux ---------- */
+  .level-list{ display:flex; flex-direction:column; gap:1rem; }
+  .level-card{
+    display:flex;
+    gap:1rem;
+    align-items:flex-start;
+    text-align:left;
+    width:100%;
+    padding:1.1rem 1.25rem;
+    font-weight:400;
+    font-size:1rem;
+    border-radius:var(--sketch-radius);
+  }
+  .level-card .num{
+    font-family:var(--serif);
+    font-size:2.2rem;
+    line-height:1;
+    color:var(--blue);
+    flex:none;
+    width:2rem;
+  }
+  .level-card .body{ display:flex; flex-direction:column; gap:0.15rem; }
+  .level-card .title{ font-family:var(--serif); font-size:1.3rem; font-weight:600; }
+  .level-card .desc{ color:var(--graphite-soft); font-size:0.92rem; line-height:1.45; }
+
+  /* ---------- Barre de progression du jeu ---------- */
+  #game-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:1rem;
+    font-size:0.8rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--graphite-pale);
+    font-weight:600;
+  }
+  #progress-dots{ display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:-0.6rem; }
+  .dot{
+    width:0.55rem; height:0.55rem;
+    border:1.25px solid var(--graphite-pale);
+    border-radius:50%;
+  }
+  .dot.done{ background:var(--blue); border-color:var(--blue); }
+  .dot.missed{ background:var(--red-soft); border-color:var(--red); }
+  .dot.current{ border-color:var(--graphite); transform:scale(1.25); }
+
+  /* ---------- Zone d'exercice ---------- */
+  .consigne{
+    font-family:var(--serif);
+    font-size:clamp(1.25rem,4.2vw,1.7rem);
+    line-height:1.35;
+    margin:0;
+    text-wrap:balance;
+  }
+  .consigne em{ font-style:italic; color:var(--blue); }
+
+  .figure{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:clamp(0.6rem,2.5vw,1.4rem);
+    padding:0.4rem 0;
+  }
+  .figure svg{ display:block; max-width:100%; height:auto; overflow:visible; }
+  .figure .unit{ display:block; }
+  .figure .hatch{ display:none; }
+  .figure .hatch.on{ display:block; }
+  .figure .part{ cursor:default; }
+  .figure.shading .part{ cursor:pointer; }
+  @media (hover:hover){
+    .figure.shading .part:hover{ fill:rgba(60,90,138,0.07); }
+  }
+
+  /* ---------- Écriture fractionnaire ---------- */
+  .frac{
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    font-family:var(--serif);
+    line-height:1;
+    vertical-align:middle;
+  }
+  .frac .num, .frac .den{ padding:0.06em 0.25em; font-variant-numeric:lining-nums; }
+  .frac .bar{
+    display:block;
+    width:100%;
+    min-width:1.4em;
+    height:2px;
+    background:var(--graphite);
+    border-radius:2px;
+  }
+  .frac.big{ font-size:clamp(2rem,8vw,3rem); }
+  .frac.mid{ font-size:1.6rem; }
+  /* Fraction posée dans une phrase : proportionnelle à la ligne. */
+  .frac.inline{ font-size:0.82em; margin:0 0.15em; }
+
+  .mixed{ display:inline-flex; align-items:center; gap:0.35em; font-family:var(--serif); }
+
+  .answer-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    gap:0.75rem;
+    font-family:var(--serif);
+    font-size:clamp(1.4rem,5vw,2rem);
+  }
+  .cell{
+    display:inline-block;
+    font-family:var(--serif);
+    font-size:clamp(1.4rem,5vw,1.9rem);
+    text-align:center;
+    width:2.6em;
+    padding:0.25rem 0.15rem;
+    color:var(--graphite);
+    background:rgba(255,255,255,0.4);
+    border:1.5px solid var(--graphite-pale);
+    border-radius:var(--sketch-radius);
+  }
+  .cell:focus{ outline:none; border-color:var(--blue); background:rgba(255,255,255,0.75); }
+  .cell.mini{ width:2.1em; }
+
+  .frac-input{
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.35rem;
+  }
+  .frac-input .bar{ width:2.8em; height:2px; background:var(--graphite); border-radius:2px; }
+
+  /* ---------- QCM ---------- */
+  .choices{ display:grid; gap:0.75rem; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); }
+  .choice{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:0.5rem;
+    min-height:4.5rem;
+    padding:1rem 0.9rem;
+    font-family:var(--serif);
+    font-size:1.25rem;
+    font-weight:400;
+    border-radius:var(--sketch-radius);
+  }
+  .choice:nth-child(even){ border-radius:var(--sketch-radius-alt); }
+  .choice.picked{ background:var(--blue-soft); border-color:var(--blue); border-width:2px; }
+  .choice.right{ background:var(--green-soft); border-color:var(--green); border-width:2px; }
+  .choice.wrong{ background:var(--red-soft); border-color:var(--red); border-width:2px; }
+
+  /* ---------- Retour ---------- */
+  .verdict{
+    display:flex;
+    align-items:flex-start;
+    gap:0.7rem;
+    font-family:var(--serif);
+    font-size:1.2rem;
+    min-height:2rem;
+  }
+  .verdict .mark{ font-size:1.5rem; line-height:1; flex:none; }
+  .verdict.correct{ color:var(--green); }
+  .verdict.incorrect{ color:var(--red); }
+  .verdict .explain{ display:block; color:var(--graphite-soft); font-size:1rem; font-style:italic; }
+
+  .game-body{ display:flex; flex-direction:column; justify-content:center; gap:1.25rem; flex:1; }
+  .game-foot{ display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; }
+
+  /* ---------- Bilan ---------- */
+  #result-score{
+    font-family:var(--serif);
+    font-size:clamp(3rem,14vw,5rem);
+    line-height:1;
+    color:var(--blue);
+  }
+  #result-score span{ font-size:0.4em; color:var(--graphite-pale); }
+
+  .recap{ display:flex; flex-direction:column; gap:0.5rem; }
+  .recap-line{
+    display:flex;
+    gap:0.6rem;
+    align-items:baseline;
+    font-size:0.95rem;
+    color:var(--graphite-soft);
+    border-bottom:1px dotted var(--graphite-pale);
+    padding-bottom:0.35rem;
+  }
+  .recap-line .tag{ font-weight:600; color:var(--graphite); }
+
+  /* ---------- Tableau enseignant ---------- */
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:0.92rem; }
+  th{
+    text-align:left;
+    font-family:var(--sans);
+    font-size:0.7rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--graphite-pale);
+    font-weight:600;
+    padding:0.5rem 0.7rem 0.5rem 0;
+    border-bottom:1.5px solid var(--graphite);
+    white-space:nowrap;
+  }
+  td{
+    padding:0.6rem 0.7rem 0.6rem 0;
+    border-bottom:1px dotted var(--graphite-pale);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  td:first-child{ font-family:var(--serif); font-size:1.05rem; }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+<div id="app">
+
+  <section id="home-screen" class="screen visible">
+    <p class="eyebrow">Mathématiques &middot; CM2</p>
+    <h1>Les fractions,<br>au crayon</h1>
+    <div id="home-art" class="figure static"></div>
+    <p class="lede">Lire, écrire, représenter, décomposer et encadrer des fractions &mdash; avec des barres et des disques découpés, comme sur le cahier.</p>
+    <form id="id-form">
+      <input id="name-input" type="text" placeholder="Ton prénom" autocomplete="given-name" maxlength="30" required>
+      <button type="submit" class="primary">Entrer</button>
+    </form>
+    <p class="serif-note">Un cahier d&rsquo;exercices pour s&rsquo;entraîner à son rythme : pas de chronomètre.</p>
+  </section>
+
+  <section id="level-screen" class="screen">
+    <p class="eyebrow" id="level-hello">Bonjour</p>
+    <h2>Choisis ton niveau</h2>
+    <div class="level-list">
+      <button class="level-card" data-level="1">
+        <span class="num">1</span>
+        <span class="body">
+          <span class="title">Lire, écrire et représenter</span>
+          <span class="desc">D&rsquo;abord des fractions plus petites qu&rsquo;un entier, puis des fractions plus petites ou plus grandes qu&rsquo;un entier. 16 questions.</span>
+        </span>
+      </button>
+      <button class="level-card" data-level="2">
+        <span class="num">2</span>
+        <span class="body">
+          <span class="title">Décomposer et encadrer</span>
+          <span class="desc">Écrire une fraction comme un entier plus une fraction, et la placer entre deux entiers. 12 questions.</span>
+        </span>
+      </button>
+    </div>
+    <div class="actions">
+      <button class="quiet" id="btn-change-player">Changer de joueur</button>
+    </div>
+  </section>
+
+  <section id="game-screen" class="screen">
+    <div id="game-top">
+      <span id="game-level-label">Niveau 1</span>
+      <span id="game-score">0 point</span>
+    </div>
+    <div id="progress-dots"></div>
+
+    <div class="game-body">
+      <p class="consigne" id="consigne"></p>
+      <div class="figure" id="figure"></div>
+      <div id="answer-zone"></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+
+    <div class="game-foot">
+      <button class="primary" id="btn-validate">Valider</button>
+      <button class="quiet" id="btn-quit">Arrêter</button>
+    </div>
+  </section>
+
+  <section id="result-screen" class="screen">
+    <p class="eyebrow" id="result-level"></p>
+    <h1 id="result-title">Bravo !</h1>
+    <div id="result-score">0<span> / 0</span></div>
+    <p class="lede" id="result-comment"></p>
+    <div class="recap" id="result-recap"></div>
+    <div class="actions">
+      <button class="primary" id="btn-replay">Recommencer ce niveau</button>
+      <button id="btn-levels">Changer de niveau</button>
+    </div>
+  </section>
+
+  <section id="teacher-screen" class="screen">
+    <p class="eyebrow">Espace enseignant</p>
+    <h2>Résultats de la classe</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Élève</th>
+            <th>Parties</th>
+            <th>Niveau 1</th>
+            <th>Niveau 2</th>
+            <th>Dernière partie</th>
+          </tr>
+        </thead>
+        <tbody id="teacher-tbody"></tbody>
+      </table>
+    </div>
+    <p class="serif-note" id="teacher-status"></p>
+    <div class="actions">
+      <button class="quiet" id="btn-teacher-back">Retour</button>
+    </div>
+  </section>
+
+</div>
+<script>
+var Croquis = (function(){
+  "use strict";
+
+  /* ============================================================
+     1. Tracé au crayon : lignes tremblées, hachures, disques
+     ============================================================ */
+
+  var uid = 0;
+  function nextId(){ uid += 1; return 'p' + uid; }
+  function rand(a, b){ return a + Math.random() * (b - a); }
+  function randInt(a, b){ return Math.floor(rand(a, b + 1)); }
+  function pick(arr){ return arr[randInt(0, arr.length - 1)]; }
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = randInt(0, i);
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function round(v){ return Math.round(v * 100) / 100; }
+
+  // Une ligne « à main levée » : légère cambrure aléatoire, tracée deux fois.
+  function strokeLine(x1, y1, x2, y2, opts){
+    opts = opts || {};
+    var color = opts.color || 'var(--graphite)';
+    var width = opts.width || 1.6;
+    var passes = opts.passes || 2;
+    var dx = x2 - x1, dy = y2 - y1;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var nx = -dy / len, ny = dx / len;
+    var out = '';
+    for(var p = 0; p < passes; p++){
+      var amp = (0.5 + len * 0.006) * (p === 0 ? 1 : 0.7);
+      var o1 = rand(-amp, amp), o2 = rand(-amp, amp);
+      var s = rand(-0.8, 0.8), e = rand(-0.8, 0.8);
+      var ax = x1 + nx * s, ay = y1 + ny * s;
+      var bx = x2 + nx * e, by = y2 + ny * e;
+      var c1x = x1 + dx / 3 + nx * o1, c1y = y1 + dy / 3 + ny * o1;
+      var c2x = x1 + dx * 2 / 3 + nx * o2, c2y = y1 + dy * 2 / 3 + ny * o2;
+      out += '<path d="M' + round(ax) + ' ' + round(ay) +
+        ' C' + round(c1x) + ' ' + round(c1y) + ' ' + round(c2x) + ' ' + round(c2y) +
+        ' ' + round(bx) + ' ' + round(by) + '" fill="none" stroke="' + color +
+        '" stroke-width="' + (width * (p === 0 ? 1 : 0.72)) +
+        '" stroke-linecap="round" opacity="' + (p === 0 ? 0.9 : 0.42) + '"/>';
+    }
+    return out;
+  }
+
+  // Un cercle « à main levée » : rayon légèrement irrégulier, deux passages.
+  function circlePath(cx, cy, r, wobble){
+    var steps = 48, d = '';
+    for(var i = 0; i <= steps; i++){
+      var a = (i / steps) * Math.PI * 2;
+      var rr = r + Math.sin(a * 3 + wobble) * (r * 0.008) + rand(-0.6, 0.6);
+      var x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr;
+      d += (i === 0 ? 'M' : 'L') + round(x) + ' ' + round(y) + ' ';
+    }
+    return d + 'Z';
+  }
+  function strokeCircle(cx, cy, r){
+    return '<path d="' + circlePath(cx, cy, r, rand(0, 6)) + '" fill="none" stroke="var(--graphite)" stroke-width="1.7" stroke-linejoin="round" opacity="0.9"/>' +
+           '<path d="' + circlePath(cx, cy, r, rand(0, 6)) + '" fill="none" stroke="var(--graphite)" stroke-width="1.1" stroke-linejoin="round" opacity="0.38"/>';
+  }
+
+  // Hachures au crayon bleu, contenues dans une zone découpée.
+  function hatch(clipId, cx, cy, span, angle){
+    var lines = '';
+    var half = span / 2;
+    for(var y = -half; y <= half; y += 5){
+      var jitterA = rand(-1.2, 1.2), jitterB = rand(-1.2, 1.2);
+      var inset = rand(0, 2.5);
+      lines += '<path d="M' + round(cx - half + inset) + ' ' + round(cy + y + jitterA) +
+        ' Q' + round(cx) + ' ' + round(cy + y + rand(-1.4, 1.4)) + ' ' +
+        round(cx + half - inset) + ' ' + round(cy + y + jitterB) +
+        '" fill="none" stroke="var(--blue)" stroke-width="' + round(rand(0.9, 1.35)) +
+        '" stroke-linecap="round" opacity="' + round(rand(0.35, 0.62)) + '"/>';
+    }
+    return '<g clip-path="url(#' + clipId + ')" transform="rotate(' + angle + ' ' + cx + ' ' + cy + ')">' + lines + '</g>';
+  }
+
+  /* --- Barre découpée en d parts --- */
+  function barSVG(d, shaded, opts){
+    opts = opts || {};
+    var w = opts.width || 260, h = opts.height || 62;
+    var pad = 6;
+    var x0 = pad, y0 = pad, x1 = pad + w, y1 = pad + h;
+    var step = w / d;
+    var defs = '', body = '', hits = '';
+
+    for(var i = 0; i < d; i++){
+      var px = x0 + i * step;
+      var id = nextId();
+      defs += '<clipPath id="' + id + '"><rect x="' + round(px) + '" y="' + y0 +
+        '" width="' + round(step) + '" height="' + h + '"/></clipPath>';
+      body += '<g class="hatch' + (shaded[i] ? ' on' : '') + '" data-index="' + i + '">' +
+        hatch(id, px + step / 2, y0 + h / 2, Math.sqrt(step * step + h * h) * 1.1, -38) + '</g>';
+      hits += '<rect class="part" data-index="' + i + '" x="' + round(px) + '" y="' + y0 +
+        '" width="' + round(step) + '" height="' + h + '" fill="transparent"/>';
+    }
+    // Contour puis séparations
+    body += strokeLine(x0, y0, x1, y0) + strokeLine(x1, y0, x1, y1) +
+            strokeLine(x1, y1, x0, y1) + strokeLine(x0, y1, x0, y0);
+    for(var k = 1; k < d; k++){
+      body += strokeLine(x0 + k * step, y0, x0 + k * step, y1, { width: 1.3 });
+    }
+    return '<svg viewBox="0 0 ' + (w + pad * 2) + ' ' + (h + pad * 2) + '" width="' + (w + pad * 2) +
+      '" role="img"><defs>' + defs + '</defs>' + body + hits + '</svg>';
+  }
+
+  /* --- Disque découpé en d parts --- */
+  function diskSVG(d, shaded, opts){
+    opts = opts || {};
+    var r = opts.r || 58;
+    var pad = 8;
+    var cx = r + pad, cy = r + pad;
+    var defs = '', body = '', hits = '';
+    var start = -Math.PI / 2;
+
+    function pt(a, rad){ return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]; }
+
+    for(var i = 0; i < d; i++){
+      var a1 = start + (i / d) * Math.PI * 2;
+      var a2 = start + ((i + 1) / d) * Math.PI * 2;
+      var p1 = pt(a1, r), p2 = pt(a2, r);
+      var large = (a2 - a1) > Math.PI ? 1 : 0;
+      var sector = d === 1
+        ? 'M' + round(cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + (r * 2) + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-r * 2) + ' 0 Z'
+        : 'M' + cx + ' ' + cy + ' L' + round(p1[0]) + ' ' + round(p1[1]) +
+          ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + round(p2[0]) + ' ' + round(p2[1]) + ' Z';
+      var id = nextId();
+      defs += '<clipPath id="' + id + '"><path d="' + sector + '"/></clipPath>';
+      var mid = (a1 + a2) / 2;
+      var mc = d === 1 ? [cx, cy] : pt(mid, r * 0.55);
+      body += '<g class="hatch' + (shaded[i] ? ' on' : '') + '" data-index="' + i + '">' +
+        hatch(id, mc[0], mc[1], d <= 2 ? r * 2.3 : r * 1.35, -38) + '</g>';
+      hits += '<path class="part" data-index="' + i + '" d="' + sector + '" fill="transparent"/>';
+    }
+    body += strokeCircle(cx, cy, r);
+    if(d > 1){
+      for(var k = 0; k < d; k++){
+        var a = start + (k / d) * Math.PI * 2;
+        var e = pt(a, r);
+        body += strokeLine(cx, cy, e[0], e[1], { width: 1.3 });
+      }
+    }
+    return '<svg viewBox="0 0 ' + (r + pad) * 2 + ' ' + (r + pad) * 2 + '" width="' + (r + pad) * 2 +
+      '" role="img"><defs>' + defs + '</defs>' + body + hits + '</svg>';
+  }
+
+  // Dessine n/d : autant d'unités que nécessaire, remplies l'une après l'autre.
+  function figureSVG(shape, d, shadedCount, units, opts){
+    opts = opts || {};
+    var html = '';
+    for(var u = 0; u < units; u++){
+      var flags = [];
+      for(var i = 0; i < d; i++){
+        flags.push(u * d + i < shadedCount);
+      }
+      var o = { width: opts.width, height: opts.height, r: opts.r };
+      html += '<span class="unit" data-unit="' + u + '">' +
+        (shape === 'bar' ? barSVG(d, flags, o) : diskSVG(d, flags, o)) + '</span>';
+    }
+    return html;
+  }
+
+  // Taille adaptée au nombre d'unités affichées.
+  function sizeFor(shape, units){
+    if(shape === 'bar'){
+      var w = units >= 3 ? 150 : (units === 2 ? 190 : 280);
+      return { width: w, height: units >= 3 ? 44 : 56 };
+    }
+    return { r: units >= 3 ? 40 : (units === 2 ? 50 : 62) };
+  }
+
+  /* ============================================================
+     2. Écriture des fractions
+     ============================================================ */
+
+  var DENOMS = [2, 3, 4, 5, 6, 8, 10];
+  var NUM_WORDS = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix',
+    'onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf','vingt',
+    'vingt et un','vingt-deux','vingt-trois','vingt-quatre','vingt-cinq','vingt-six','vingt-sept',
+    'vingt-huit','vingt-neuf','trente'];
+  var DEN_WORDS = {
+    2: ['demi', 'demis'], 3: ['tiers', 'tiers'], 4: ['quart', 'quarts'],
+    5: ['cinquième', 'cinquièmes'], 6: ['sixième', 'sixièmes'],
+    8: ['huitième', 'huitièmes'], 10: ['dixième', 'dixièmes']
+  };
+  function fracWords(n, d){
+    return NUM_WORDS[n] + ' ' + DEN_WORDS[d][n > 1 ? 1 : 0];
+  }
+  function fracHTML(n, d, cls){
+    return '<span class="frac ' + (cls || 'mid') + '"><span class="num">' + n +
+      '</span><span class="bar"></span><span class="den">' + d + '</span></span>';
+  }
+  function mixedHTML(e, n, d){
+    return '<span class="mixed">' + e + ' + ' + fracHTML(n, d, 'mid') + '</span>';
+  }
+
+  return {
+    rand: rand, randInt: randInt, pick: pick, shuffle: shuffle,
+    figureSVG: figureSVG, sizeFor: sizeFor,
+    DENOMS: DENOMS, fracWords: fracWords, fracHTML: fracHTML, mixedHTML: mixedHTML
+  };
+})();
+</script>
+<script>
+var Exos = (function(C){
+  "use strict";
+
+  var frac = C.fracHTML, words = C.fracWords, mixed = C.mixedHTML;
+  var pick = C.pick, randInt = C.randInt, shuffle = C.shuffle;
+
+  function shape(){ return Math.random() < 0.5 ? 'bar' : 'disk'; }
+  function unitsFor(n, d){ return Math.max(1, Math.ceil(n / d)); }
+
+  function properFraction(){
+    var d = pick(C.DENOMS);
+    return { n: randInt(1, d - 1), d: d };
+  }
+  function anyFraction(){
+    if(Math.random() < 0.45) return properFraction();
+    var d = pick(C.DENOMS);
+    var maxUnits = d >= 8 ? 2 : 3;
+    var n;
+    do { n = randInt(d + 1, d * maxUnits); } while(n % d === 0);
+    return { n: n, d: d };
+  }
+  function improperFraction(){
+    var d = pick(C.DENOMS);
+    var maxUnits = d >= 8 ? 3 : 4;
+    var n;
+    do { n = randInt(d + 1, d * maxUnits); } while(n % d === 0);
+    return { n: n, d: d };
+  }
+
+  function fig(sh, d, shaded, units){
+    return { shape: sh, d: d, shaded: shaded, units: units };
+  }
+
+  /* ---------- Niveau 1 ---------- */
+
+  // Une figure hachurée est montrée : l'élève écrit la fraction.
+  function exoLire(f){
+    var sh = shape(), u = unitsFor(f.n, f.d);
+    return {
+      kind: 'lire',
+      consigne: u > 1
+        ? 'Chaque figure vaut <em>un entier</em>. Quelle fraction est hachurée ?'
+        : 'Quelle fraction de la figure est hachurée ?',
+      fig: fig(sh, f.d, f.n, u),
+      ui: { type: 'frac' },
+      answer: { n: f.n, d: f.d },
+      explain: 'Chaque unité est partagée en ' + f.d + ' parts égales : la part vaut ' +
+        frac(1, f.d) + '. Il y en a ' + f.n + ' de hachurées, donc ' + frac(f.n, f.d) +
+        ', ce qui se lit « ' + words(f.n, f.d) + ' ».'
+    };
+  }
+
+  // Une fraction est donnée : l'élève hachure les parts au crayon.
+  function exoRepresenter(f){
+    var sh = shape(), u = unitsFor(f.n, f.d);
+    var flat = [];
+    for(var i = 0; i < u * f.d; i++) flat.push(false);
+    return {
+      kind: 'representer',
+      consigne: 'Hachure ' + frac(f.n, f.d, 'inline') + ' &nbsp;' +
+        (u > 1 ? 'sur ces figures.' : 'sur cette figure.'),
+      fig: null,
+      ui: { type: 'shade', shape: sh, d: f.d, units: u, target: f.n, cells: flat },
+      answer: { count: f.n },
+      solution: fig(sh, f.d, f.n, u),
+      explain: 'Il fallait hachurer ' + f.n + ' part' + (f.n > 1 ? 's' : '') + ' de ' +
+        frac(1, f.d) + (u > 1 ? ', donc ' + (u - 1) + ' figure' + (u > 2 ? 's' : '') +
+        ' entière' + (u > 2 ? 's' : '') + ' puis une partie de la dernière.' : '.')
+    };
+  }
+
+  // Lecture à voix haute : passer des chiffres aux mots, ou l'inverse.
+  function exoNom(f){
+    var toWords = Math.random() < 0.5;
+    var others = [];
+    var d2 = pick(C.DENOMS.filter(function(x){ return x !== f.d; }));
+    others.push({ n: f.n, d: d2 });
+    others.push({ n: Math.max(1, f.n === 1 ? 2 : f.n - 1), d: f.d });
+    others = others.filter(function(o){ return !(o.n === f.n && o.d === f.d); });
+
+    var items = [{ n: f.n, d: f.d, ok: true }].concat(
+      others.slice(0, 2).map(function(o){ return { n: o.n, d: o.d, ok: false }; })
+    );
+    return {
+      kind: 'nom',
+      consigne: toWords
+        ? 'Comment se lit ' + frac(f.n, f.d, 'inline') + ' ?'
+        : 'Quelle fraction s&rsquo;écrit « <em>' + words(f.n, f.d) + '</em> » ?',
+      fig: null,
+      ui: {
+        type: 'choices',
+        items: shuffle(items).map(function(it){
+          return { html: toWords ? words(it.n, it.d) : frac(it.n, it.d, 'mid'), ok: it.ok };
+        })
+      },
+      explain: frac(f.n, f.d) + ' se lit « ' + words(f.n, f.d) + ' » : ' + f.n +
+        ' fois la part ' + frac(1, f.d) + '.'
+    };
+  }
+
+  // Une fraction est donnée : l'élève reconnaît le bon dessin parmi trois.
+  function exoImage(f){
+    var sh = shape(), u = unitsFor(f.n, f.d);
+    var wrongCount = f.n > 1 ? f.n - 1 : f.n + 1;
+    var wrongD = f.d <= 3 ? f.d + 2 : f.d - 1;
+    var items = shuffle([
+      { d: f.d, shaded: f.n, units: u, ok: true },
+      { d: f.d, shaded: wrongCount, units: unitsFor(wrongCount, f.d), ok: false },
+      { d: wrongD, shaded: f.n, units: unitsFor(f.n, wrongD), ok: false }
+    ]);
+    return {
+      kind: 'image',
+      consigne: 'Quel dessin représente ' + frac(f.n, f.d, 'inline') + ' ?',
+      fig: null,
+      ui: {
+        type: 'choices',
+        mode: 'fig',
+        items: items.map(function(it){
+          return { figure: fig(sh, it.d, it.shaded, it.units), ok: it.ok };
+        })
+      },
+      solution: fig(sh, f.d, f.n, u),
+      explain: 'Il faut ' + f.d + ' parts égales par unité, et ' + f.n + ' parts hachurées.'
+    };
+  }
+
+  /* ---------- Niveau 2 ---------- */
+
+  function exoDecomposer(f){
+    var e = Math.floor(f.n / f.d), r = f.n % f.d;
+    var withFig = Math.random() < 0.45;
+    var sh = shape();
+    return {
+      kind: 'decomposer',
+      consigne: 'Décompose ' + frac(f.n, f.d, 'inline') +
+        ' en un nombre entier plus une fraction inférieure à 1.',
+      fig: withFig ? fig(sh, f.d, f.n, e + 1) : null,
+      ui: { type: 'mixed', d: f.d },
+      answer: { e: e, n: r },
+      solution: withFig ? null : fig(sh, f.d, f.n, e + 1),
+      explain: frac(f.n, f.d) + ' = ' + frac(e * f.d, f.d) + ' + ' + frac(r, f.d) + ' = ' +
+        mixed(e, r, f.d) + ' : il y a ' + e + ' unité' + (e > 1 ? 's' : '') + ' entière' +
+        (e > 1 ? 's' : '') + ' (' + (e * f.d) + ' parts) et il reste ' + r + ' part' +
+        (r > 1 ? 's' : '') + '.'
+    };
+  }
+
+  function exoEncadrer(f){
+    var e = Math.floor(f.n / f.d), r = f.n % f.d;
+    return {
+      kind: 'encadrer',
+      consigne: 'Encadre ' + frac(f.n, f.d, 'inline') + ' entre deux nombres entiers qui se suivent.',
+      fig: null,
+      ui: { type: 'range', frac: f },
+      answer: { lo: e, hi: e + 1 },
+      solution: fig(shape(), f.d, f.n, e + 1),
+      explain: frac(f.n, f.d) + ' = ' + mixed(e, r, f.d) + ', donc ' + e + ' &lt; ' +
+        frac(f.n, f.d) + ' &lt; ' + (e + 1) + '.'
+    };
+  }
+
+  function exoQcmDecomp(f){
+    var e = Math.floor(f.n / f.d), r = f.n % f.d;
+    var candidates = [
+      { e: e + 1, n: r }, { e: e, n: f.d - r }, { e: e - 1, n: r },
+      { e: e, n: r + 1 }, { e: e + 1, n: f.d - r }
+    ].filter(function(c){
+      return c.e >= 0 && c.n >= 1 && c.n < f.d && !(c.e === e && c.n === r);
+    });
+    var wrong = [];
+    candidates.forEach(function(c){
+      var dup = wrong.some(function(w){ return w.e === c.e && w.n === c.n; });
+      if(!dup && wrong.length < 2) wrong.push(c);
+    });
+    var items = shuffle([{ e: e, n: r, ok: true }].concat(
+      wrong.map(function(c){ return { e: c.e, n: c.n, ok: false }; })
+    ));
+    return {
+      kind: 'qcm-decomp',
+      consigne: 'Quelle égalité est juste pour ' + frac(f.n, f.d, 'inline') + ' ?',
+      fig: null,
+      ui: {
+        type: 'choices',
+        items: items.map(function(it){
+          return { html: mixed(it.e, it.n, f.d), ok: it.ok };
+        })
+      },
+      explain: e + ' fois ' + f.d + ' parts font ' + (e * f.d) + ' parts ; il reste ' + r +
+        ' part' + (r > 1 ? 's' : '') + ', donc ' + frac(f.n, f.d) + ' = ' + mixed(e, r, f.d) + '.'
+    };
+  }
+
+  /* ---------- Assemblage d'une partie ---------- */
+
+  function buildSession(level){
+    var plan = [], qs = [], last = '';
+
+    if(level === 1){
+      // Manche 1 : uniquement des fractions inférieures à un.
+      plan = plan.concat(shuffle(['lire', 'lire', 'representer', 'representer', 'nom', 'image', 'lire', 'nom'])
+        .map(function(t){ return { type: t, src: properFraction }; }));
+      // Manche 2 : indifféremment inférieures ou supérieures à un.
+      plan = plan.concat(shuffle(['lire', 'lire', 'representer', 'representer', 'image', 'nom', 'representer', 'lire'])
+        .map(function(t){ return { type: t, src: anyFraction }; }));
+    } else {
+      plan = shuffle([
+        'decomposer', 'decomposer', 'decomposer', 'decomposer', 'decomposer',
+        'encadrer', 'encadrer', 'encadrer', 'encadrer',
+        'qcm-decomp', 'qcm-decomp', 'qcm-decomp'
+      ]).map(function(t){ return { type: t, src: improperFraction }; });
+    }
+
+    plan.forEach(function(step){
+      var f, key, guard = 0;
+      do {
+        f = step.src();
+        key = f.n + '/' + f.d;
+        guard++;
+      } while(key === last && guard < 12);
+      last = key;
+
+      if(step.type === 'lire') qs.push(exoLire(f));
+      else if(step.type === 'representer') qs.push(exoRepresenter(f));
+      else if(step.type === 'nom') qs.push(exoNom(f));
+      else if(step.type === 'image') qs.push(exoImage(f));
+      else if(step.type === 'decomposer') qs.push(exoDecomposer(f));
+      else if(step.type === 'encadrer') qs.push(exoEncadrer(f));
+      else qs.push(exoQcmDecomp(f));
+    });
+
+    return qs;
+  }
+
+  return { buildSession: buildSession };
+})(Croquis);
+</script>
+<script>
+(function(C, E){
+  "use strict";
+
+  var el = function(id){ return document.getElementById(id); };
+  var screens = {
+    home: el('home-screen'),
+    level: el('level-screen'),
+    game: el('game-screen'),
+    result: el('result-screen'),
+    teacher: el('teacher-screen')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle('visible', k === name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  var figureEl = el('figure');
+  var consigneEl = el('consigne');
+  var answerEl = el('answer-zone');
+  var verdictEl = el('verdict');
+  var validateBtn = el('btn-validate');
+
+  var player = '';
+  var level = 1;
+  var questions = [];
+  var index = 0;
+  var score = 0;
+  var results = [];
+  var phase = 'answering';
+
+  /* ---------- Dessin d'une figure ---------- */
+  function renderFigure(container, f, interactive){
+    if(!f){ container.innerHTML = ''; container.className = 'figure'; return; }
+    var size = C.sizeFor(f.shape, f.units);
+    container.innerHTML = C.figureSVG(f.shape, f.d, f.shaded, f.units, size);
+    container.className = 'figure' + (interactive ? ' shading' : ' static');
+  }
+
+  function blankFigure(container, ui){
+    var size = C.sizeFor(ui.shape, ui.units);
+    container.innerHTML = C.figureSVG(ui.shape, ui.d, 0, ui.units, size);
+    container.className = 'figure shading';
+    container.addEventListener('click', onShadeClick);
+  }
+
+  function onShadeClick(e){
+    if(phase !== 'answering') return;
+    var part = e.target.closest ? e.target.closest('.part') : null;
+    if(!part) return;
+    var unit = part.closest('.unit');
+    var svg = part.ownerSVGElement;
+    var idx = part.getAttribute('data-index');
+    var hatchEl = svg.querySelector('.hatch[data-index="' + idx + '"]');
+    if(hatchEl) hatchEl.classList.toggle('on');
+    if(unit) updateShadeCount();
+  }
+
+  function updateShadeCount(){
+    var counter = el('shade-count');
+    if(counter) counter.textContent = figureEl.querySelectorAll('.hatch.on').length;
+  }
+
+  /* ---------- Zones de réponse ---------- */
+  function numCell(id, placeholder){
+    return '<input class="cell mini" id="' + id + '" type="text" inputmode="numeric" ' +
+      'pattern="[0-9]*" autocomplete="off" maxlength="3" aria-label="' + placeholder + '">';
+  }
+
+  function renderAnswer(q){
+    var ui = q.ui;
+    if(ui.type === 'frac'){
+      answerEl.innerHTML = '<div class="answer-row"><span class="frac-input">' +
+        numCell('in-num', 'numérateur') + '<span class="bar"></span>' +
+        numCell('in-den', 'dénominateur') + '</span></div>';
+    } else if(ui.type === 'mixed'){
+      answerEl.innerHTML = '<div class="answer-row">' + numCell('in-e', 'nombre entier') +
+        '<span>+</span><span class="frac-input">' + numCell('in-num', 'numérateur') +
+        '<span class="bar"></span><span class="cell mini" aria-hidden="true">' + ui.d +
+        '</span></span></div>';
+    } else if(ui.type === 'range'){
+      answerEl.innerHTML = '<div class="answer-row">' + numCell('in-lo', 'entier plus petit') +
+        '<span>&lt;</span>' + C.fracHTML(ui.frac.n, ui.frac.d, 'big') + '<span>&lt;</span>' +
+        numCell('in-hi', 'entier plus grand') + '</div>';
+    } else if(ui.type === 'shade'){
+      answerEl.innerHTML = '<p class="serif-note" style="text-align:center">Parts hachurées : ' +
+        '<strong id="shade-count">0</strong></p>';
+      blankFigure(figureEl, ui);
+    } else if(ui.type === 'choices'){
+      var html = '<div class="choices">';
+      ui.items.forEach(function(it, i){
+        html += '<button type="button" class="choice" data-choice="' + i + '">' +
+          (it.figure ? renderChoiceFigure(it.figure) : it.html) + '</button>';
+      });
+      answerEl.innerHTML = html + '</div>';
+      answerEl.querySelectorAll('.choice').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(phase !== 'answering') return;
+          answerEl.querySelectorAll('.choice').forEach(function(b){ b.classList.remove('picked'); });
+          btn.classList.add('picked');
+        });
+      });
+    }
+    var first = answerEl.querySelector('input');
+    if(first) setTimeout(function(){ first.focus(); }, 60);
+  }
+
+  function renderChoiceFigure(f){
+    var size = f.units > 1 ? (f.shape === 'bar' ? { width: 110, height: 34 } : { r: 30 })
+                           : (f.shape === 'bar' ? { width: 140, height: 40 } : { r: 38 });
+    return '<span class="figure static" style="gap:0.3rem">' +
+      C.figureSVG(f.shape, f.d, f.shaded, f.units, size) + '</span>';
+  }
+
+  /* ---------- Correction ---------- */
+  function readInt(id){
+    var node = el(id);
+    if(!node) return null;
+    var v = node.value.trim();
+    if(v === '' || !/^\d+$/.test(v)) return null;
+    return parseInt(v, 10);
+  }
+
+  function evaluate(q){
+    var ui = q.ui;
+    if(ui.type === 'frac'){
+      var n = readInt('in-num'), d = readInt('in-den');
+      if(n === null || d === null) return { ok: false, missing: true };
+      return { ok: n === q.answer.n && d === q.answer.d,
+               given: C.fracHTML(n, d, 'mid') };
+    }
+    if(ui.type === 'mixed'){
+      var e = readInt('in-e'), r = readInt('in-num');
+      if(e === null || r === null) return { ok: false, missing: true };
+      return { ok: e === q.answer.e && r === q.answer.n };
+    }
+    if(ui.type === 'range'){
+      var lo = readInt('in-lo'), hi = readInt('in-hi');
+      if(lo === null || hi === null) return { ok: false, missing: true };
+      return { ok: lo === q.answer.lo && hi === q.answer.hi };
+    }
+    if(ui.type === 'shade'){
+      var count = figureEl.querySelectorAll('.hatch.on').length;
+      if(count === 0) return { ok: false, missing: true };
+      return { ok: count === q.answer.count };
+    }
+    // QCM
+    var picked = answerEl.querySelector('.choice.picked');
+    if(!picked) return { ok: false, missing: true };
+    var i = parseInt(picked.getAttribute('data-choice'), 10);
+    return { ok: !!ui.items[i].ok, pickedIndex: i };
+  }
+
+  function markChoices(q, pickedIndex){
+    answerEl.querySelectorAll('.choice').forEach(function(btn, i){
+      btn.classList.remove('picked');
+      if(q.ui.items[i].ok) btn.classList.add('right');
+      else if(i === pickedIndex) btn.classList.add('wrong');
+    });
+  }
+
+  /* ---------- Déroulé d'une partie ---------- */
+  function renderDots(){
+    var html = '';
+    for(var i = 0; i < questions.length; i++){
+      var cls = 'dot';
+      if(i < results.length) cls += results[i] ? ' done' : ' missed';
+      else if(i === index) cls += ' current';
+      html += '<span class="' + cls + '"></span>';
+    }
+    el('progress-dots').innerHTML = html;
+  }
+
+  function startSession(lvl){
+    level = lvl;
+    questions = E.buildSession(lvl);
+    index = 0;
+    score = 0;
+    results = [];
+    el('game-level-label').textContent = 'Niveau ' + lvl;
+    showScreen('game');
+    showQuestion();
+  }
+
+  function showQuestion(){
+    var q = questions[index];
+    phase = 'answering';
+    figureEl.removeEventListener('click', onShadeClick);
+    consigneEl.innerHTML = q.consigne;
+    renderFigure(figureEl, q.fig, false);
+    verdictEl.innerHTML = '';
+    verdictEl.className = 'verdict';
+    validateBtn.textContent = 'Valider';
+    el('game-score').textContent = score + (score > 1 ? ' points' : ' point');
+    renderDots();
+    renderAnswer(q);
+  }
+
+  function validate(){
+    var q = questions[index];
+    var res = evaluate(q);
+
+    if(res.missing){
+      verdictEl.className = 'verdict';
+      verdictEl.innerHTML = '<span class="explain">' +
+        (q.ui.type === 'choices' ? 'Choisis une réponse avant de valider.'
+         : q.ui.type === 'shade' ? 'Touche les parts de la figure pour les hachurer.'
+         : 'Complète toute la réponse avant de valider.') + '</span>';
+      return;
+    }
+
+    phase = 'feedback';
+    results.push(res.ok);
+    if(res.ok) score++;
+
+    if(q.ui.type === 'choices') markChoices(q, res.pickedIndex);
+    answerEl.querySelectorAll('input').forEach(function(i){ i.disabled = true; });
+
+    if(q.solution) renderFigure(figureEl, q.solution, false);
+    else if(q.fig) renderFigure(figureEl, q.fig, false);
+    else if(q.ui.type === 'shade') figureEl.classList.remove('shading');
+
+    verdictEl.className = 'verdict ' + (res.ok ? 'correct' : 'incorrect');
+    verdictEl.innerHTML = '<span class="mark">' + (res.ok ? '✓' : '✗') + '</span><span>' +
+      (res.ok ? 'Juste !' : 'Pas encore.') +
+      '<span class="explain">' + q.explain + '</span></span>';
+
+    el('game-score').textContent = score + (score > 1 ? ' points' : ' point');
+    renderDots();
+    validateBtn.textContent = index + 1 < questions.length ? 'Question suivante' : 'Voir le bilan';
+    validateBtn.focus();
+  }
+
+  function advance(){
+    index++;
+    if(index >= questions.length) endSession();
+    else showQuestion();
+  }
+
+  var CATEGORIES = {
+    1: [
+      { label: 'Lire et nommer une fraction', kinds: ['lire', 'nom'] },
+      { label: 'Représenter une fraction', kinds: ['representer', 'image'] }
+    ],
+    2: [
+      { label: 'Décomposer', kinds: ['decomposer', 'qcm-decomp'] },
+      { label: 'Encadrer', kinds: ['encadrer'] }
+    ]
+  };
+
+  function endSession(){
+    showScreen('result');
+    el('result-level').textContent = 'Niveau ' + level + ' — ' +
+      (level === 1 ? 'lire, écrire et représenter' : 'décomposer et encadrer');
+    el('result-title').textContent = score === questions.length
+      ? 'Sans faute, ' + player + ' !'
+      : 'Bien joué, ' + player + ' !';
+    el('result-score').innerHTML = score + '<span> / ' + questions.length + '</span>';
+
+    var ratio = score / questions.length;
+    el('result-comment').textContent = ratio === 1 ? 'Tout est juste : tu maîtrises ce niveau.'
+      : ratio >= 0.8 ? 'Très solide. Encore une partie et ce sera parfait.'
+      : ratio >= 0.5 ? 'Tu progresses : relis bien le nombre de parts de chaque figure.'
+      : 'Recommence tranquillement : compte d’abord en combien de parts égales l’unité est partagée.';
+
+    var recap = '';
+    CATEGORIES[level].forEach(function(cat){
+      var total = 0, good = 0;
+      questions.forEach(function(q, i){
+        if(cat.kinds.indexOf(q.kind) === -1) return;
+        total++;
+        if(results[i]) good++;
+      });
+      if(total){
+        recap += '<div class="recap-line"><span class="tag">' + cat.label + '</span>' +
+          '<span>' + good + ' sur ' + total + '</span></div>';
+      }
+    });
+    el('result-recap').innerHTML = recap;
+
+    saveSession();
+  }
+
+  /* ---------- Identification et suivi ---------- */
+  function normalizeName(s){
+    return s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+  }
+  function isTeacher(s){
+    var n = normalizeName(s);
+    return n === 'maitre' || n === 'maitresse' || n === 'prof' || n === 'professeur';
+  }
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  var dbNS = null;
+  var dbReady = (async function(){
+    try{
+      dbNS = (window.claude && typeof window.claude.use === 'function')
+        ? await window.claude.use('db')
+        : null;
+    }catch(e){ dbNS = null; }
+  })();
+
+  // Sans base partagée (version publique), les parties restent sur l'appareil.
+  var LS_KEY = 'fractions-cm2-parties';
+  function readLocal(){
+    try{ return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+  function writeLocal(rows){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(rows.slice(-300))); }
+    catch(e){}
+  }
+
+  function saveSession(){
+    var record = {
+      player: player,
+      level: level,
+      score: score,
+      total: questions.length,
+      date: new Date().toISOString()
+    };
+    writeLocal(readLocal().concat([record]));
+    dbReady.then(function(){
+      if(!dbNS) return;
+      dbNS.collection('parties').add(record).catch(function(){});
+    });
+  }
+
+  function startTeacherView(){
+    var status = el('teacher-status');
+    status.textContent = 'Chargement des résultats…';
+    renderTeacherTable(readLocal());
+    dbReady.then(function(){
+      if(!dbNS){
+        status.textContent = 'Parties enregistrées sur cet appareil uniquement.';
+        return;
+      }
+      dbNS.collection('parties').orderBy('date', 'desc').limit(500).onSnapshot(
+        function(snap){
+          status.textContent = '';
+          renderTeacherTable(snap.docs.map(function(d){ return d.data(); }));
+        },
+        function(){ status.textContent = 'Impossible de charger les résultats pour le moment.'; }
+      );
+    });
+  }
+
+  function renderTeacherTable(rows){
+    var tbody = el('teacher-tbody');
+    if(!rows.length){
+      tbody.innerHTML = '<tr><td colspan="5">Aucune partie enregistrée pour l\'instant.</td></tr>';
+      return;
+    }
+    var byPlayer = {};
+    rows.forEach(function(r){
+      var name = String(r.player || '?').trim();
+      var key = normalizeName(name) || '?';
+      if(!byPlayer[key]) byPlayer[key] = { display: name, games: [] };
+      byPlayer[key].games.push(r);
+    });
+
+    var list = Object.keys(byPlayer).map(function(key){
+      var entry = byPlayer[key];
+      var games = entry.games.slice().sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
+      function best(lvl){
+        var pool = games.filter(function(g){ return Number(g.level) === lvl; });
+        if(!pool.length) return '—';
+        var top = pool.reduce(function(m, g){ return Math.max(m, Number(g.score) || 0); }, 0);
+        return top + ' / ' + (Number(pool[0].total) || 0);
+      }
+      var last = games[0];
+      var dt = new Date(last.date);
+      var lastLabel = isNaN(dt.getTime()) ? '—' :
+        dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' · ' +
+        dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return {
+        display: entry.display, count: games.length,
+        n1: best(1), n2: best(2), last: lastLabel
+      };
+    });
+
+    list.sort(function(a, b){ return a.display.localeCompare(b.display, 'fr'); });
+    tbody.innerHTML = list.map(function(r){
+      return '<tr><td>' + escapeHtml(r.display) + '</td><td>' + r.count + '</td><td>' +
+        r.n1 + '</td><td>' + r.n2 + '</td><td>' + r.last + '</td></tr>';
+    }).join('');
+  }
+
+  /* ---------- Branchements ---------- */
+  el('id-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = el('name-input').value.trim();
+    if(!name) return;
+    if(isTeacher(name)){
+      showScreen('teacher');
+      startTeacherView();
+      return;
+    }
+    player = name;
+    el('level-hello').textContent = 'Bonjour ' + name;
+    showScreen('level');
+  });
+
+  document.querySelectorAll('.level-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      startSession(parseInt(card.getAttribute('data-level'), 10));
+    });
+  });
+
+  validateBtn.addEventListener('click', function(){
+    if(phase === 'answering') validate();
+    else advance();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    if(!screens.game.classList.contains('visible')) return;
+    // Un bouton déjà ciblé déclenche lui-même son clic : ne pas doubler.
+    if(e.target && e.target.tagName === 'BUTTON') return;
+    e.preventDefault();
+    if(phase === 'answering') validate();
+    else advance();
+  });
+
+  el('btn-quit').addEventListener('click', function(){ showScreen('level'); });
+  el('btn-replay').addEventListener('click', function(){ startSession(level); });
+  el('btn-levels').addEventListener('click', function(){ showScreen('level'); });
+  el('btn-change-player').addEventListener('click', function(){
+    el('name-input').value = '';
+    showScreen('home');
+  });
+  el('btn-teacher-back').addEventListener('click', function(){
+    el('name-input').value = '';
+    showScreen('home');
+  });
+
+  // Dessin d'accueil : trois quarts et cinq sixièmes, comme une marge illustrée.
+  el('home-art').innerHTML =
+    C.figureSVG('disk', 4, 3, 1, { r: 46 }) +
+    C.figureSVG('bar', 6, 5, 1, { width: 200, height: 46 });
+
+})(Croquis, Exos);
+</script>
